@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application that sends HN newsletter.
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.run_lambda
+      Runtime: python3.8
+      CodeUri: hn-newsletter/.
+      Description: Send HN newsletter
+      Timeout: 10
+      # Function's execution role
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaReadOnlyAccess
+        - AWSXrayWriteOnlyAccess
+        - AmazonSESFullAccess
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(00 10 ? * THU *)
+            Description: Schedule Sending HN Newsletter
+      Tracing: Active
+      Layers:
+        - !Ref libs
+  libs:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: python-hn-newsletter-v1-lib
+      Description: Dependencies for the HN newsletter app.
+      ContentUri: packages/.
+      CompatibleRuntimes:
+        - python3.8
